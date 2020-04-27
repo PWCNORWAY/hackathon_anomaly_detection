@@ -5,9 +5,22 @@ library(readxl)
 
 df <- vroom::vroom("data/aml_trans.csv")
 
-# Filtrer data til kun 2018-2019
+# Filtrer data til kun 2018-2019, og fjern visse typer
+fjern_tekstkode <-
+  c(
+    "BRUKSRENTER",
+    "DEBETRENTER",
+    "GEBYR",
+    "GEBYR MOT ANNEN KONTO",
+    "DISKONTERING",
+    "SUMPOST OCR-GIRO",
+    "SUMPOST AUTO-GIRO",
+    "AVREGNING TEAMCO/BBS"
+  )
+
 df <- df %>% 
-  filter(year(valuteringsdato) %in% c(2018, 2019))
+  filter(year(valuteringsdato) %in% c(2018, 2019)) %>% 
+  filter(!(tekstkode_beskrivelse %in% fjern_tekstkode))
 
 # Lag anonymisert kunde-id
 df <- df %>% 
@@ -16,8 +29,8 @@ df <- df %>%
   ungroup()
 
 df %>% 
-  select(-kundenummer) %>% 
-  vroom::vroom_write("transaksjonsdata.csv", delim = ";")
+  select(-kundenummer, - alfareferanse, - disponert_konto) %>% 
+  vroom::vroom_write("data/transaksjonsdata.csv", delim = ";")
 
 
 # Lag fasit ---------------------------------------------------------------
@@ -68,7 +81,7 @@ test1_innlevering <- tibble(kunde_id = fasit$kunde_id,
                           risk_score = rnorm(nrow(fasit), 50, 5))
 
 test2_innlevering <- tibble(kunde_id = fasit$kunde_id,
-                          risk_score = rnorm(nrow(fasit), 50, 10))
+                          risk_score = rnorm(nrow(fasit), 50, 7))
 
 test1_innlevering %>% vroom::vroom_write("innlevering/test1_kunde.csv", delim = ";")
 test2_innlevering %>% vroom::vroom_write("innlevering/test2_kunde.csv", delim = ";")
