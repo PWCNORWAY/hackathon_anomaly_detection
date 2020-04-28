@@ -19,7 +19,6 @@ fjern_tekstkode <-
   )
 
 df <- df %>% 
-  filter(year(valuteringsdato) %in% c(2018, 2019)) %>% 
   filter(!(tekstkode_beskrivelse %in% fjern_tekstkode))
 
 # Lag anonymisert kunde-id
@@ -28,16 +27,26 @@ df <- df %>%
   mutate(kunde_id = group_indices()) %>% 
   ungroup()
 
-df %>% 
+train <- df %>% 
+  filter(year(valuteringsdato) == 2018)
+
+test <- df %>% 
+  filter(year(valuteringsdato) == 2019)
+
+train %>% 
   select(-kundenummer, - alfareferanse, - disponert_konto) %>% 
-  vroom::vroom_write("data/transaksjonsdata.csv", delim = ";")
+  vroom::vroom_write("data/transaksjonsdata_train.csv", delim = ";")
+
+test %>% 
+  select(-kundenummer, - alfareferanse, - disponert_konto) %>% 
+  vroom::vroom_write("data/transaksjonsdata_test.csv", delim = ";")
 
 
 # Lag fasit ---------------------------------------------------------------
 
 
 # Lagre kundemapping
-kundemapping <- df %>% 
+kundemapping <- test %>% 
   select(kundenummer, kunde_id) %>% 
   distinct(kundenummer, kunde_id)
 
